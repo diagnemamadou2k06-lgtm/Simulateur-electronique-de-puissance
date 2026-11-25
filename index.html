@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwNjEyNDg2NjIyMDUyNjcxNDU3OCIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzRjYzMwNmM0OTUzNGYyNzNfc2ltdWxhdGV1cl9oYWNoZXVyLmh0bWwtNSJ9LCJleHAiOjE3OTU2MzI3MDIsImlhdCI6MTc5NTYyOTEwMiwiYWxnIjoiUlMyNTYifQ.Y5goZUInI0r34krl0nH8F-AOin6WIt3u3oWXCISWMrYDiBB2QuzEpiaXOWFHNp0wKyO_GHTNgM1f7wPsfWo-4ZNzubLHoJo9fmVVl3hh1yqR4wy9Uks4CEQurN7K2ndwuvYCspgBOa5jQ5plHlNHHZr9qgV8oTRq5oNloK1JdabtQdew0ojTOl02U1GUmrAI7Yl98xpNQbOEIuUK4o8g368HTEm99lK_vgNR1xEv_5YkBd7yBaouhHAN3uJRsOSkWWyRCHwBZ_2MzBb_7GRpwsoAfMxnjMhtGH16x2UeW3oPkRf1cvNqRL5ca_ZH88_RnM9V9aDcGSL9Hk3toBdG4w","c_4cc306c49534f273_simulateur_hacheur.html-5")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.i=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.extensions="";var l=0,t=null,r=null,q=[],F=new TextEncoder,
+G=new TextDecoder;c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*
+16|0;return(f==="x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;
+(g=t)==null||g.postMessage(a)}};Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  const OVERLAY_SELECTOR =
+    'dialog[open], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"]';
+
+  function isVisibleOverlay(element) {
+    if (element.closest('[hidden], [aria-hidden="true"], [inert]')) {
+      return false;
+    }
+    if (window.getComputedStyle(element).visibility === 'hidden') {
+      return false;
+    }
+    for (let cur = element; cur; cur = cur.parentElement) {
+      if (window.getComputedStyle(cur).display === 'none') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function hasOpenOverlay() {
+    const candidates = document.querySelectorAll(OVERLAY_SELECTOR);
+    for (let i = 0; i < candidates.length; i++) {
+      if (isVisibleOverlay(candidates[i])) {
+        return true;
+      }
+    }
+    try {
+      if (document.querySelector('[popover]:popover-open')) {
+        return true;
+      }
+    } catch (e) {
+      // Ignore engines that do not support :popover-open.
+    }
+    return false;
+  }
+
+  function isNonEmptySearchInput(target) {
+    return (
+      Boolean(target) &&
+      target.tagName === 'INPUT' &&
+      typeof target.type === 'string' &&
+      target.type.toLowerCase() === 'search' &&
+      typeof target.value === 'string' &&
+      target.value.length > 0
+    );
+  }
+
+  function shouldIgnoreEscape(event) {
+    return (
+      event.key !== 'Escape' ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing ||
+      event.repeat ||
+      event.keyCode === 229 ||
+      isNonEmptySearchInput(event.target)
+    );
+  }
+
+  let shouldIgnoreCaptureState = false;
+
+  window.addEventListener(
+    'keydown',
+    function(event) {
+      if (event.key === 'Escape') {
+        shouldIgnoreCaptureState =
+          hasOpenOverlay() || isNonEmptySearchInput(event.target);
+      }
+    },
+    {capture: true},
+  );
+
+  window.addEventListener('keydown', function(event) {
+    if (
+      shouldIgnoreEscape(event) ||
+      event.defaultPrevented ||
+      shouldIgnoreCaptureState
+    ) {
+      return;
+    }
+    const wasBlockedOnCapture = shouldIgnoreCaptureState;
+    queueMicrotask(function() {
+      if (event.defaultPrevented || wasBlockedOnCapture) {
+        return;
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({'type': 'escapeKey'}, '*');
+      }
+    });
+  });
+})();</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Simulateur Électronique de Puissance — Application Installable (PC &amp; Android)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-sub: #f8fafc;
+      --border-col: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+    }
+    body.dark {
+      --bg-page: #0b1120;
+      --bg-card: #1e293b;
+      --bg-sub: #0f172a;
+      --border-col: #334155;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .card-box {
+      background-color: var(--bg-card);
+      border-color: var(--border-col);
+    }
+    .sub-box {
+      background-color: var(--bg-sub);
+      border-color: var(--border-col);
+    }
+    .muted-txt { color: var(--text-muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* Boutons d'onglets propres */
+    .tab-btn {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-col);
+      background-color: var(--bg-sub);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .param-panel { display: none; }
+    .param-panel.active { display: grid; }
+    .analysis-panel { display: none; }
+    .analysis-panel.active { display: block; }
+
+    /* Barres de défilement discrètes */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+
+    /* Règle stricte pour les canvas */
+    canvas {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+    }
+    .scope-canvas {
+      height: 112px !important;
+      cursor: crosshair;
+    }
+    .scope-canvas-sm {
+      height: 68px !important;
+      cursor: crosshair;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.inset-0{inset:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.ml-2{margin-left:0.5rem}.mr-2{margin-right:0.5rem}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-4{height:1rem}.h-8{height:2rem}.h-\[175px\]{height:175px}.h-\[190px\]{height:190px}.h-auto{height:auto}.w-4{width:1rem}.w-8{width:2rem}.w-full{width:100%}.min-w-0{min-width:0px}.max-w-\[1600px\]{max-width:1600px}.max-w-\[460px\]{max-width:460px}.max-w-xl{max-width:36rem}.border-collapse{border-collapse:collapse}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-slate-200\/40 > :not([hidden]) ~ :not([hidden]){border-color:rgb(226 232 240 / 0.4)}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-blue-400{--tw-border-opacity:1;border-color:rgb(96 165 250 / var(--tw-border-opacity, 1))}.border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-slate-200\/60{border-color:rgb(226 232 240 / 0.6)}.border-slate-300\/60{border-color:rgb(203 213 225 / 0.6)}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/15{background-color:rgb(16 185 129 / 0.15)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-rose-600{--tw-bg-opacity:1;background-color:rgb(225 29 72 / var(--tw-bg-opacity, 1))}.bg-slate-700{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.bg-slate-950\/70{background-color:rgb(2 6 23 / 0.7)}.bg-slate-500\/15{background-color:rgb(100 116 139 / 0.15)}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.pb-3{padding-bottom:0.75rem}.pl-1{padding-left:0.25rem}.pr-2{padding-right:0.5rem}.pt-2{padding-top:0.5rem}.text-left{text-align:left}.text-right{text-align:right}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:0.025em}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-blue-950{--tw-text-opacity:1;color:rgb(23 37 84 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-emerald-700{--tw-text-opacity:1;color:rgb(4 120 87 / var(--tw-text-opacity, 1))}.text-orange-600{--tw-text-opacity:1;color:rgb(234 88 12 / var(--tw-text-opacity, 1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.text-rose-600{--tw-text-opacity:1;color:rgb(225 29 72 / var(--tw-text-opacity, 1))}.text-sky-600{--tw-text-opacity:1;color:rgb(2 132 199 / var(--tw-text-opacity, 1))}.text-violet-600{--tw-text-opacity:1;color:rgb(124 58 237 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.accent-blue-600{accent-color:#2563eb}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-blue-700:hover{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-rose-700:hover{--tw-bg-opacity:1;background-color:rgb(190 18 60 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-600:hover{--tw-bg-opacity:1;background-color:rgb(71 85 105 / var(--tw-bg-opacity, 1))}.hover\:opacity-80:hover{opacity:0.8}@media (min-width: 640px){.sm\:col-span-2{grid-column:span 2 / span 2}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.sm\:p-3{padding:0.75rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width: 768px){.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:p-4{padding:1rem}}@media (min-width: 1280px){.xl\:col-span-5{grid-column:span 5 / span 5}.xl\:col-span-7{grid-column:span 7 / span 7}.xl\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}}@media (prefers-color-scheme: dark){.dark\:text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.dark\:text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.dark\:text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.dark\:text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}}</style><link rel="manifest" href="blob:https://08mixkodwvm0hpu4wdh9osqnf9hxftzpk4kb1chytq2lyai1mn-h1029127910.scf.usercontent.goog/1dd86ee5-383e-4919-a642-03078a35a768"></head>
+<body class="p-2 sm:p-3 lg:p-4 text-sm">
+
+  <!-- EN-TÊTE PRINCIPAL -->
+  <header class="max-w-[1600px] mx-auto mb-3 card-box border rounded-xl px-3 py-2.5 shadow-sm flex flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm">⚡</div>
+      <div>
+        <h1 class="text-sm sm:text-base font-bold leading-tight">Simulateur d'Électronique de Puissance</h1>
+        <p class="text-[11px] muted-txt">Convertisseurs statiques • Pertes • Thermique • FFT • PWA Hors-ligne</p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-1.5">
+      <select id="selTopology" class="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-blue-500 bg-blue-50 text-blue-950" title="Choisir la topologie du convertisseur">
+        <option value="buck">Hacheur Série (Buck)</option>
+        <option value="boost">Hacheur Parallèle (Boost)</option>
+        <option value="buckboost">Série-Parallèle (Buck-Boost)</option>
+        <option value="halfbridge">Demi-Pont (Bras complet)</option>
+      </select>
+
+      <select id="selPreset" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg sub-box border" title="Charger un jeu de paramètres prédéfinis">
+        <option value="buck_48_12">Preset : Buck 48V → 12V (10A, 100kHz)</option>
+        <option value="boost_12_48">Preset : Boost 12V → 48V (100kHz)</option>
+        <option value="buckboost_24_24">Preset : Buck-Boost 24V → -24V</option>
+        <option value="halfbridge_400_200">Preset : Demi-Pont 400V → 200V</option>
+      </select>
+
+      <button id="btnExportCsv" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg sub-box border hover:opacity-80 transition" title="Télécharger les formes d'onde au format CSV">
+        CSV
+      </button>
+      <button id="btnExportPng" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg sub-box border hover:opacity-80 transition" title="Exporter une capture PNG des chronogrammes">
+        PNG
+      </button>
+      <button id="btnThemeToggle" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-white hover:bg-slate-600 transition" title="Basculer thème clair / sombre">
+        Thème Sombre
+      </button>
+      <button id="btnInstallApp" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm flex items-center gap-1.5" title="Installer l'application sur ordinateur ou Android">
+        <span>📲 Installer (PC / Android)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MODALE D'INSTALLATION & EXPORT PACKAGE ANDROID / DESKTOP -->
+  <div id="installModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="card-box border rounded-2xl max-w-xl w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200/60 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded">PWA &amp; HORS-LIGNE</span>
+          <h2 class="text-base font-bold">Installer sur Ordinateur &amp; Android</h2>
+        </div>
+        <button id="btnCloseInstallModal" class="px-2.5 py-1 text-xs font-bold rounded-lg sub-box border hover:opacity-80">✕ Fermer</button>
+      </div>
+
+      <!-- Bouton d'installation natif si le navigateur le propose -->
+      <div id="nativePromptBox" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3">
+        <div class="text-xs">
+          <div class="font-bold text-emerald-700 dark:text-emerald-400">Installation directe prête !</div>
+          <div class="muted-txt">Votre navigateur permet d'installer l'application en un clic sans store.</div>
+        </div>
+        <button id="btnTriggerNativeInstall" class="px-3.5 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow whitespace-nowrap">
+          Installer maintenant
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="sub-box border rounded-xl p-3 space-y-1.5">
+          <div class="font-bold text-sm flex items-center gap-1.5">💻 Sur Ordinateur (Windows / Mac / Linux)</div>
+          <ol class="list-decimal list-inside space-y-1 muted-txt">
+            <li>Ouvrez ce fichier via un serveur local (ex : <code class="mono text-blue-600">npx serve</code> ou VS Code Live Server) ou hébergez-le (GitHub Pages / Netlify).</li>
+            <li>Dans <strong>Chrome / Edge</strong>, cliquez sur l'icône <strong>Installer l'application (⊕)</strong> à droite de la barre d'adresse.</li>
+            <li>L'application apparaît dans votre menu Démarrer / Applications comme un logiciel natif hors-ligne.</li>
+          </ol>
+        </div>
+
+        <div class="sub-box border rounded-xl p-3 space-y-1.5">
+          <div class="font-bold text-sm flex items-center gap-1.5">📱 Sur Android (App &amp; APK)</div>
+          <ol class="list-decimal list-inside space-y-1 muted-txt">
+            <li><strong>Installation directe (PWA) :</strong> Ouvrez l'URL sur Chrome Android → Menu <strong>⋮</strong> → <strong>« Ajouter à l'écran d'accueil / Installer l'application »</strong>.</li>
+            <li><strong>Générer un fichier .APK :</strong> Téléchargez le pack ci-dessous et importez-le dans <strong>PWABuilder.com</strong> ou <strong>Capacitor</strong> pour compiler un APK signé.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+        <button id="btnDownloadStandaloneHtml" class="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+          ⬇ Télécharger le fichier autonome (.html)
+        </button>
+        <button id="btnDownloadManifestJson" class="px-3 py-2 text-xs font-semibold rounded-lg sub-box border hover:opacity-80 transition">
+          ⬇ Télécharger manifest.json (pour APK / PWABuilder)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRILLE PRINCIPALE -->
+  <main class="max-w-[1600px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-3 items-start">
+
+    <!-- COLONNE GAUCHE (5/12) : Contrôles, Schéma, Tableau d'état & Paramètres -->
+    <section class="xl:col-span-5 flex flex-col gap-3 min-w-0">
+
+      <!-- 1. Barre de contrôle simulation -->
+      <div class="card-box border rounded-xl p-3 shadow-sm space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button id="btnPlay" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700">Pause</button>
+            <button id="btnStep" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg sub-box border hover:opacity-80">Pas à pas</button>
+            <button id="btnReset" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg sub-box border hover:opacity-80">Réinitialiser</button>
+          </div>
+
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="muted-txt font-semibold">Vitesse :</span>
+            <select id="selSpeed" class="px-2 py-1 rounded-lg sub-box border font-semibold">
+              <option value="0.005">×0,005</option>
+              <option value="0.02">×0,02</option>
+              <option value="0.1" selected="">×0,1</option>
+              <option value="0.5">×0,5</option>
+              <option value="1">×1</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
+          <div class="flex items-center gap-1.5">
+            <button id="btnGateOn" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Envoyer commande</button>
+            <button id="btnGateOff" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-rose-600 text-white hover:bg-rose-700">Couper commande</button>
+          </div>
+
+          <label class="flex items-center gap-2 text-xs font-bold cursor-pointer select-none">
+            <span>Mode :</span>
+            <input type="checkbox" id="chkRealistic" checked="" class="w-4 h-4 accent-blue-600 rounded">
+            <span id="lblModelMode" class="text-blue-600">Réaliste (pertes &amp; parasites)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 2. Schéma animé du circuit -->
+      <div class="card-box border rounded-xl p-3 shadow-sm space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+          <span class="font-bold uppercase tracking-wide muted-txt">Schéma animé &amp; Lois instantanées</span>
+          <span id="badgeLaws" class="mono text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+            vT + vD = Ve ✓ | iT + iD = iL ✓
+          </span>
+        </div>
+
+        <div class="sub-box border rounded-lg p-2 flex items-center justify-center overflow-hidden">
+          <svg id="circuitSvg" viewBox="0 0 460 225" class="w-full max-w-[460px] h-auto select-none">
+          <defs>
+            <marker id="arrRed" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"></path>
+            </marker>
+            <marker id="arrOrange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#ea580c"></path>
+            </marker>
+            <marker id="arrGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"></path>
+            </marker>
+          </defs>
+          <text x="230" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">Cellule Buck (T série, D parallèle)</text>
+
+          <!-- Connexions principales -->
+          <polyline points="55,75 55,42 125,42" fill="none" stroke="#64748b" stroke-width="2.5"></polyline>
+          <polyline points="200,42 265,42" fill="none" stroke="#64748b" stroke-width="2.5"></polyline>
+          <polyline points="340,42 405,42 405,78" fill="none" stroke="#64748b" stroke-width="2.5"></polyline>
+          <polyline points="55,145 55,195 405,195 405,152" fill="none" stroke="#64748b" stroke-width="2.5"></polyline>
+          <line x1="225" y1="42" x2="225" y2="90" stroke="#64748b" stroke-width="2.5"></line>
+          <line x1="225" y1="145" x2="225" y2="195" stroke="#64748b" stroke-width="2.5"></line>
+          <circle cx="225" cy="42" r="4" fill="#334155"></circle>
+          <circle cx="225" cy="195" r="4" fill="#334155"></circle>
+
+          <!-- Source Ve -->
+          <circle cx="55" cy="110" r="30" fill="#ffffff" stroke="#334155" stroke-width="2.5"></circle>
+          <text x="55" y="106" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Ve</text>
+          <text id="svgVeTxt" x="55" y="122" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="bold">48 V</text>
+
+          <!-- Interrupteur T -->
+          <rect id="svgBoxT" x="125" y="22" width="75" height="40" rx="7" fill="#f1f5f9" stroke="#64748b" stroke-width="2.5"></rect>
+          <text x="162" y="40" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">T</text>
+          <text id="svgTxtT" x="162" y="54" text-anchor="middle" font-size="9" font-weight="bold" fill="#475569">BLOQUÉ</text>
+
+          <!-- Diode D -->
+          <rect id="svgBoxD" x="195" y="90" width="60" height="55" rx="7" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"></rect>
+          <polygon id="svgPolyD" points="214,132 236,132 225,110" fill="#16a34a"></polygon>
+          <line id="svgBarD" x1="212" y1="110" x2="238" y2="110" stroke="#16a34a" stroke-width="3"></line>
+          <text x="245" y="104" font-size="10" font-weight="bold" fill="#0f172a">D</text>
+
+          <!-- Inductance L -->
+          <rect x="265" y="28" width="75" height="28" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="2"></rect>
+          <text x="302" y="46" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">L</text>
+
+          <!-- Condensateur C & Charge R -->
+          <line x1="365" y1="42" x2="365" y2="105" stroke="#64748b" stroke-width="2"></line>
+          <line x1="353" y1="105" x2="377" y2="105" stroke="#0f172a" stroke-width="3"></line>
+          <line x1="353" y1="115" x2="377" y2="115" stroke="#0f172a" stroke-width="3"></line>
+          <line x1="365" y1="115" x2="365" y2="195" stroke="#64748b" stroke-width="2"></line>
+          <text x="346" y="114" font-size="10" font-weight="bold" fill="#475569">C</text>
+
+          <rect x="390" y="78" width="30" height="74" rx="5" fill="#ffffff" stroke="#334155" stroke-width="2"></rect>
+          <text x="405" y="118" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">Z</text>
+          <text id="svgVsTxt" x="405" y="212" text-anchor="middle" font-size="10" font-weight="bold" fill="#0284c7">Vs = 11.7 V</text>
+
+          <!-- Flèches de courants animées -->
+          <line id="svgFlowIT" x1="72" y1="32" x2="116" y2="32" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrRed)" stroke-dashoffset="-4.479999999044768" style="opacity: 0.15;"></line>
+          <text id="svgValIT" x="94" y="25" text-anchor="middle" font-size="9" font-weight="bold" fill="#dc2626">iT=0.0A</text>
+
+          <line id="svgFlowID" x1="264" y1="142" x2="264" y2="95" stroke="#ea580c" stroke-width="3.6372138800599703" stroke-dasharray="5 4" marker-end="url(#arrOrange)" stroke-dashoffset="-4.479999999044768" style="opacity: 1;"></line>
+          <text id="svgValID" x="288" y="122" font-size="9" font-weight="bold" fill="#ea580c">iD=9.4A</text>
+
+          <line id="svgFlowIL" x1="268" y1="20" x2="335" y2="20" stroke="#059669" stroke-width="3.6372138800599703" stroke-dasharray="5 4" marker-end="url(#arrGreen)" stroke-dashoffset="-4.479999999044768" style="opacity: 1;"></line>
+          <text id="svgValIL" x="302" y="13" text-anchor="middle" font-size="9" font-weight="bold" fill="#059669">iL=9.4A</text>
+
+          <!-- Valeurs vT et vD -->
+          <text id="svgValVT" x="162" y="75" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563eb">vT = 48.0 V</text>
+          <text id="svgValVD" x="160" y="122" text-anchor="middle" font-size="10" font-weight="bold" fill="#7c3aed">vD = 0.0 V</text>
+        </svg>
+        </div>
+
+        <!-- Indicateurs synthétiques (CCM/DCM, Théorie vs Simulé) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+          <div class="sub-box border rounded-lg p-2">
+            <div class="text-[10px] muted-txt uppercase font-semibold">Régime</div>
+            <div id="valRegime" class="font-bold text-blue-600 mono">CCM (Continu)</div>
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="text-[10px] muted-txt uppercase font-semibold">Vs simulé / théo</div>
+            <div id="valVsCompare" class="font-bold mono">11.7V / 12.0V</div>
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="text-[10px] muted-txt uppercase font-semibold">Ondulation ΔiL</div>
+            <div id="valDeltaIL" class="font-bold mono">1.82 A</div>
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="text-[10px] muted-txt uppercase font-semibold">Rendement η</div>
+            <div id="valEfficiency" class="font-bold text-emerald-600 mono">96.6 %</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Tableau d'état dynamique des composants -->
+      <div class="card-box border rounded-xl p-3 shadow-sm overflow-x-auto">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold uppercase tracking-wide muted-txt">État dynamique des composants</span>
+          <span id="badgeThermalAlert" class="hidden text-[11px] font-bold px-2 py-0.5 rounded bg-rose-600 text-white animate-pulse">
+            ⚠ ALERTE SURCHAUFFE Tj !
+          </span>
+        </div>
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-300/60 muted-txt text-[11px]">
+              <th class="py-1 pr-2">Comp.</th>
+              <th class="py-1 px-1">État</th>
+              <th class="py-1 px-1">Commutation</th>
+              <th class="py-1 px-1 text-right">v / i</th>
+              <th class="py-1 pl-1 text-right">P / Tj</th>
+            </tr>
+          </thead>
+          <tbody id="stateTableBody" class="mono text-[11px] divide-y divide-slate-200/40">
+          <tr>
+            <td class="py-1 pr-2 font-bold text-blue-600">Transistor T</td>
+            <td class="py-1 px-1"><span class="px-1.5 py-0.5 rounded font-bold bg-slate-500/15 text-slate-600 dark:text-slate-300">Bloqué</span></td>
+            <td class="py-1 px-1">Roue libre D</td>
+            <td class="py-1 px-1 text-right">48.0V / 0.0A</td>
+            <td class="py-1 pl-1 text-right">0W / 49°C</td>
+          </tr>
+          <tr>
+            <td class="py-1 pr-2 font-bold text-violet-600">Diode D</td>
+            <td class="py-1 px-1"><span class="px-1.5 py-0.5 rounded font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">Passante</span></td>
+            <td class="py-1 px-1">Spontanée</td>
+            <td class="py-1 px-1 text-right">0.0V / 9.4A</td>
+            <td class="py-1 pl-1 text-right">0W / 27°C</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <!-- 4. Paramètres réglables par onglets -->
+      <div class="card-box border rounded-xl p-3 shadow-sm space-y-2.5">
+        <div class="flex flex-wrap gap-1">
+          <button class="tab-btn active" data-tab="tabCircuit">Circuit</button>
+          <button class="tab-btn" data-tab="tabSwitch">Interrupteur T</button>
+          <button class="tab-btn" data-tab="tabDiode">Diode D</button>
+          <button class="tab-btn" data-tab="tabParasitics">Parasites &amp; L</button>
+          <button class="tab-btn" data-tab="tabThermal">Thermique</button>
+        </div>
+
+        <!-- Onglet Circuit -->
+        <div id="tabCircuit" class="param-panel active grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div class="sub-box border rounded-lg p-2" title="Tension d'alimentation continue en entrée">
+            <div class="flex justify-between font-semibold mb-1"><span>Tension Ve (V)</span><span id="txtVe" class="mono text-blue-600">48</span></div>
+            <input type="range" id="rngVe" min="5" max="600" step="1" value="48" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Rapport cyclique de commande α (Ton / T)">
+            <div class="flex justify-between font-semibold mb-1"><span>Rapport cyclique α</span><span id="txtAlpha" class="mono text-blue-600">0.25</span></div>
+            <input type="range" id="rngAlpha" min="0.05" max="0.95" step="0.01" value="0.25" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Fréquence de découpage fsw">
+            <div class="flex justify-between font-semibold mb-1"><span>Fréquence (kHz)</span><span id="txtFreq" class="mono text-blue-600">100</span></div>
+            <input type="range" id="rngFreq" min="5" max="500" step="5" value="100" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Inductance principale de lissage">
+            <div class="flex justify-between font-semibold mb-1"><span>Inductance L (µH)</span><span id="txtL" class="mono text-blue-600">50</span></div>
+            <input type="range" id="rngL" min="5" max="500" step="5" value="50" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Condensateur de filtrage en sortie">
+            <div class="flex justify-between font-semibold mb-1"><span>Condensateur C (µF)</span><span id="txtC" class="mono text-blue-600">47</span></div>
+            <input type="range" id="rngC" min="1" max="470" step="1" value="47" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Résistance de charge R">
+            <div class="flex justify-between font-semibold mb-1"><span>Charge R (Ω)</span><span id="txtR" class="mono text-blue-600">1.2</span></div>
+            <input type="range" id="rngR" min="0.2" max="50" step="0.2" value="1.2" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Force contre-électromotrice E en série avec la charge (moteur, batterie)">
+            <div class="flex justify-between font-semibold mb-1"><span>F.c.é.m. charge E (V)</span><span id="txtEload" class="mono text-blue-600">0</span></div>
+            <input type="range" id="rngEload" min="0" max="200" step="1" value="0" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2" title="Temps mort entre les deux interrupteurs en mode Demi-pont">
+            <div class="flex justify-between font-semibold mb-1"><span>Temps mort (ns)</span><span id="txtDeadTime" class="mono text-blue-600">100</span></div>
+            <input type="range" id="rngDeadTime" min="0" max="1000" step="10" value="100" class="w-full accent-blue-600">
+          </div>
+        </div>
+
+        <!-- Onglet Interrupteur T -->
+        <div id="tabSwitch" class="param-panel grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div class="sub-box border rounded-lg p-2 sm:col-span-2 flex items-center justify-between">
+            <span class="font-semibold">Technologie de T :</span>
+            <select id="selSwitchType" class="px-2 py-1 rounded sub-box border font-bold">
+              <option value="mosfet">MOSFET (Rds_on, tr, tf, Coss)</option>
+              <option value="igbt">IGBT (Vce_sat, tr, tf, courant de queue)</option>
+            </select>
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Rds_on (mΩ) / Vce_sat (V)</span><span id="txtRon" class="mono text-blue-600">15</span></div>
+            <input type="range" id="rngRon" min="1" max="200" step="1" value="15" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Temps montée tr (ns)</span><span id="txtTr" class="mono text-blue-600">35</span></div>
+            <input type="range" id="rngTr" min="5" max="500" step="5" value="35" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Temps descente tf (ns)</span><span id="txtTf" class="mono text-blue-600">40</span></div>
+            <input type="range" id="rngTf" min="5" max="500" step="5" value="40" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Capacité Coss (pF)</span><span id="txtCoss" class="mono text-blue-600">450</span></div>
+            <input type="range" id="rngCoss" min="20" max="5000" step="20" value="450" class="w-full accent-blue-600">
+          </div>
+        </div>
+
+        <!-- Onglet Diode D -->
+        <div id="tabDiode" class="param-panel grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div class="sub-box border rounded-lg p-2 sm:col-span-2 flex items-center justify-between">
+            <span class="font-semibold">Technologie de D :</span>
+            <select id="selDiodeType" class="px-2 py-1 rounded sub-box border font-bold">
+              <option value="schottky">Diode Schottky (Vf faible, Qrr quasi nul)</option>
+              <option value="fast_pn">Diode PN rapide (recouvrement modéré)</option>
+              <option value="std_pn">Diode PN standard (fort recouvrement Qrr)</option>
+            </select>
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Tension seuil Vf (V)</span><span id="txtVf" class="mono text-blue-600">0.55</span></div>
+            <input type="range" id="rngVf" min="0.1" max="2.5" step="0.05" value="0.55" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Résistance dyn. Rd (mΩ)</span><span id="txtRd" class="mono text-blue-600">12</span></div>
+            <input type="range" id="rngRd" min="1" max="150" step="1" value="12" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Temps recouvrement trr (ns)</span><span id="txtTrr" class="mono text-blue-600">25</span></div>
+            <input type="range" id="rngTrr" min="0" max="400" step="5" value="25" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Capacité jonction Cj (pF)</span><span id="txtCj" class="mono text-blue-600">300</span></div>
+            <input type="range" id="rngCj" min="10" max="4000" step="10" value="300" class="w-full accent-blue-600">
+          </div>
+        </div>
+
+        <!-- Onglet Parasites & L -->
+        <div id="tabParasitics" class="param-panel grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Inductance maille Lσ (nH)</span><span id="txtLsigma" class="mono text-blue-600">25</span></div>
+            <input type="range" id="rngLsigma" min="0" max="200" step="5" value="25" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Résistance série RL (mΩ)</span><span id="txtRL" class="mono text-blue-600">20</span></div>
+            <input type="range" id="rngRL" min="0" max="500" step="5" value="20" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>ESR condensateur C (mΩ)</span><span id="txtESR" class="mono text-blue-600">15</span></div>
+            <input type="range" id="rngESR" min="0" max="500" step="5" value="15" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Saturation Isat (A)</span><span id="txtIsat" class="mono text-blue-600">25</span></div>
+            <input type="range" id="rngIsat" min="2" max="100" step="1" value="25" class="w-full accent-blue-600">
+          </div>
+        </div>
+
+        <!-- Onglet Thermique -->
+        <div id="tabThermal" class="param-panel grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Température ambiante (°C)</span><span id="txtTamb" class="mono text-blue-600">25</span></div>
+            <input type="range" id="rngTamb" min="0" max="85" step="1" value="25" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Limite alerte Tj max (°C)</span><span id="txtTjMax" class="mono text-rose-600">150</span></div>
+            <input type="range" id="rngTjMax" min="80" max="200" step="5" value="150" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Rth(j-a) Transistor (K/W)</span><span id="txtRthT" class="mono text-blue-600">12</span></div>
+            <input type="range" id="rngRthT" min="0.5" max="60" step="0.5" value="12" class="w-full accent-blue-600">
+          </div>
+          <div class="sub-box border rounded-lg p-2">
+            <div class="flex justify-between font-semibold mb-1"><span>Rth(j-a) Diode (K/W)</span><span id="txtRthD" class="mono text-blue-600">15</span></div>
+            <input type="range" id="rngRthD" min="0.5" max="60" step="0.5" value="15" class="w-full accent-blue-600">
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLONNE DROITE (7/12) : 5 Chronogrammes Synchronisés + Modules d'analyse -->
+    <section class="xl:col-span-7 flex flex-col gap-3 min-w-0">
+
+      <!-- Oscilloscope multivoie -->
+      <div class="card-box border rounded-xl p-3 shadow-sm space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wide muted-txt">Chronogrammes synchronisés</span>
+            <span id="lblCursorTime" class="mono text-xs font-bold text-blue-600">t = 7.40 µs</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1">
+            <select id="selZoomEvent" class="border border-blue-400 bg-blue-50 text-blue-950 font-semibold text-xs rounded px-2 py-1">
+              <option value="ON_T">Amorçage de T</option>
+              <option value="OFF_D">Blocage de D</option>
+              <option value="OFF_T">Blocage de T</option>
+              <option value="ON_D">Amorçage de D</option>
+            </select>
+            <button id="btnZoomEvent" class="px-2.5 py-1 text-xs font-semibold rounded bg-blue-600 text-white hover:bg-blue-700">Zoom commutation</button>
+            <button id="btnZoomIn" class="px-2.5 py-1 text-xs font-bold border rounded sub-box">+</button>
+            <button id="btnZoomOut" class="px-2.5 py-1 text-xs font-bold border rounded sub-box">−</button>
+            <button id="btnZoomReset" class="px-2.5 py-1 text-xs font-semibold border rounded sub-box">Vue globale</button>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <!-- Voie 1 : Commande de grille -->
+          <div class="sub-box border rounded-lg px-2 py-1">
+            <div class="flex justify-between text-[11px] font-semibold">
+              <span>1. Commande de grille (vG)</span>
+              <span class="muted-txt">0 = Bloqué | 1 = Passant</span>
+            </div>
+            <canvas id="scopeGate" class="scope-canvas-sm" width="1094" height="85"></canvas>
+          </div>
+
+          <!-- Voie 2 : Transistor T -->
+          <div class="sub-box border rounded-lg px-2 py-1">
+            <div class="flex justify-between text-[11px] font-semibold">
+              <span>2. Interrupteur T</span>
+              <span>
+                <span class="text-blue-600 mr-2">■ vT (V)</span>
+                <span class="text-red-600">■ iT (A)</span>
+              </span>
+            </div>
+            <canvas id="scopeT" class="scope-canvas" width="1094" height="140"></canvas>
+          </div>
+
+          <!-- Voie 3 : Diode D -->
+          <div class="sub-box border rounded-lg px-2 py-1">
+            <div class="flex justify-between text-[11px] font-semibold">
+              <span>3. Diode de roue libre D</span>
+              <span>
+                <span class="text-violet-600 mr-2">■ vD (V)</span>
+                <span class="text-orange-600">■ iD (A)</span>
+              </span>
+            </div>
+            <canvas id="scopeD" class="scope-canvas" width="1094" height="140"></canvas>
+          </div>
+
+          <!-- Voie 4 : Courant iL & Tension Vs -->
+          <div class="sub-box border rounded-lg px-2 py-1">
+            <div class="flex justify-between text-[11px] font-semibold">
+              <span>4. Inductance &amp; Sortie</span>
+              <span>
+                <span class="text-emerald-700 mr-2">■ iL (A)</span>
+                <span class="text-sky-600">■ Vs (V)</span>
+              </span>
+            </div>
+            <canvas id="scopeLoad" class="scope-canvas" width="1094" height="140"></canvas>
+          </div>
+
+          <!-- Voie 5 : Puissances instantanées -->
+          <div class="sub-box border rounded-lg px-2 py-1">
+            <div class="flex justify-between text-[11px] font-semibold">
+              <span>5. Puissances instantanées (pertes)</span>
+              <span>
+                <span class="text-rose-600 mr-2">■ pT = vT·iT (W)</span>
+                <span class="text-amber-600">■ pD = vD·iD (W)</span>
+              </span>
+            </div>
+            <canvas id="scopePower" class="scope-canvas" width="1094" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modules d'analyse avancée (Pertes / FFT / SOA) -->
+      <div class="card-box border rounded-xl p-3 shadow-sm space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap gap-1">
+            <button class="tab-btn active" data-analysis="panelLosses">Bilan des Pertes &amp; Énergies</button>
+            <button class="tab-btn" data-analysis="panelFft">Spectre FFT</button>
+            <button class="tab-btn" data-analysis="panelSoa">Trajectoire (vT, iT) &amp; SOA</button>
+          </div>
+          <span id="txtEnergySummary" class="mono text-[11px] font-semibold muted-txt">Eon: 11.51 µJ | Eoff: 3.41 µJ | Err: 0.75 µJ</span>
+        </div>
+
+        <!-- Panneau Pertes -->
+        <div id="panelLosses" class="analysis-panel active">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+            <div class="sub-box border rounded-lg p-2 h-[190px]">
+              <canvas id="chartLossesBar" height="215" style="display: block; box-sizing: border-box; height: 172.4px; width: 422.8px;" width="528"></canvas>
+            </div>
+            <div class="sub-box border rounded-lg p-2 h-[190px]">
+              <canvas id="chartLossesPie" height="215" style="display: block; box-sizing: border-box; height: 172.4px; width: 422.8px;" width="528"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panneau FFT -->
+        <div id="panelFft" class="analysis-panel space-y-2">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-semibold">Signal analysé :</span>
+            <select id="selFftSignal" class="px-2 py-1 rounded sub-box border font-semibold">
+              <option value="vOut">Tension de sortie Vs</option>
+              <option value="iL">Courant inductance iL</option>
+              <option value="iT">Courant interrupteur iT</option>
+            </select>
+            <span class="font-semibold ml-2">Fenêtre :</span>
+            <select id="selFftWindow" class="px-2 py-1 rounded sub-box border font-semibold">
+              <option value="hann">Hann</option>
+              <option value="rect">Rectangulaire</option>
+            </select>
+          </div>
+          <div class="sub-box border rounded-lg p-2 h-[175px]">
+            <canvas id="chartFft" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+          </div>
+        </div>
+
+        <!-- Panneau Trajectoire SOA -->
+        <div id="panelSoa" class="analysis-panel">
+          <div class="sub-box border rounded-lg p-2 h-[190px]">
+            <canvas id="chartSoa" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    /* --------------------------------------------------------------------------
+     * MODULE 1 : ÉTAT GLOBAL & PARAMÈTRES DU SIMULATEUR
+     * -------------------------------------------------------------------------- */
+    const SimState = {
+      topology: 'buck',
+      Ve: 48,
+      alpha: 0.25,
+      freqKhz: 100,
+      L_uH: 50,
+      C_uF: 47,
+      R_ohm: 1.2,
+      E_load: 0,
+      deadTime_ns: 100,
+      realistic: true,
+      switchType: 'mosfet',
+      Ron_mOhm: 15,
+      tr_ns: 35,
+      tf_ns: 40,
+      Coss_pF: 450,
+      diodeType: 'schottky',
+      Vf: 0.55,
+      Rd_mOhm: 12,
+      trr_ns: 25,
+      Cj_pF: 300,
+      Lsigma_nH: 25,
+      RL_mOhm: 20,
+      ESR_mOhm: 15,
+      Isat_A: 25,
+      Tamb: 25,
+      TjMax: 150,
+      RthT: 12,
+      RthD: 15,
+      playing: true,
+      speed: 0.1,
+      progress: 0.15,
+      manualGate: null
+    };
+
+    /* --------------------------------------------------------------------------
+     * MODULE 2 : SOLVEUR PHYSIQUE & MODÈLES DE COMPOSANTS
+     * -------------------------------------------------------------------------- */
+    const PhysicsEngine = {
+      data: null,
+
+      compute() {
+        const s = SimState;
+        const T = 1 / (s.freqKhz * 1e3);
+        const tOff = s.alpha * T;
+        const L = s.L_uH * 1e-6;
+        const C = s.C_uF * 1e-6;
+        const R = Math.max(0.05, s.R_ohm);
+        const Ron = s.realistic ? s.Ron_mOhm * 1e-3 : 0;
+        const Rd = s.realistic ? s.Rd_mOhm * 1e-3 : 0;
+        const Vf = s.realistic ? s.Vf : 0;
+        const RL = s.realistic ? s.RL_mOhm * 1e-3 : 0;
+        const ESR = s.realistic ? s.ESR_mOhm * 1e-3 : 0;
+        const tr = s.realistic ? s.tr_ns * 1e-9 : Math.max(2e-9, T * 0.002);
+        const tf = s.realistic ? s.tf_ns * 1e-9 : Math.max(2e-9, T * 0.002);
+        const trr = s.realistic ? s.trr_ns * 1e-9 : 0;
+        const Lsigma = s.realistic ? s.Lsigma_nH * 1e-9 : 0;
+        const Cpar = s.realistic ? (s.Coss_pF + s.Cj_pF) * 1e-12 : 0;
+
+        // Valeurs moyennes théoriques idéales selon topologie
+        let Vs_theo = s.alpha * s.Ve;
+        let IL_avg = Vs_theo / R;
+        if (s.topology === 'boost') {
+          Vs_theo = s.Ve / Math.max(0.08, 1 - s.alpha);
+          IL_avg = (Vs_theo * Vs_theo) / (R * Math.max(1, s.Ve));
+        } else if (s.topology === 'buckboost') {
+          Vs_theo = (s.alpha * s.Ve) / Math.max(0.08, 1 - s.alpha);
+          IL_avg = (Vs_theo / R) / Math.max(0.08, 1 - s.alpha);
+        } else if (s.topology === 'halfbridge') {
+          Vs_theo = s.alpha * s.Ve;
+          IL_avg = Vs_theo / R;
+        }
+
+        // Prise en compte des chutes résistives en mode réaliste
+        const dropFactor = s.realistic ? Math.max(0.65, 1 - (RL + Ron * s.alpha + Rd * (1 - s.alpha)) / R) : 1;
+        const Vs_mean = Math.max(s.E_load, Vs_theo * dropFactor);
+        IL_avg = Math.max(0.1, (Vs_mean - s.E_load) / R * (s.topology === 'buck' || s.topology === 'halfbridge' ? 1 : 1 / Math.max(0.1, 1 - s.alpha)));
+
+        // Ondulation de courant ΔIL et détection CCM / DCM
+        const vL_on = (s.topology === 'buck' || s.topology === 'halfbridge') ? Math.max(0, s.Ve - Vs_mean) : s.Ve;
+        const Leff = IL_avg > s.Isat_A ? L * 0.45 : L;
+        const deltaIL = (vL_on * s.alpha * T) / Math.max(1e-7, Leff);
+        const isCCM = IL_avg > deltaIL * 0.5;
+        const iL_min = isCCM ? IL_avg - deltaIL * 0.5 : 0;
+        const iL_max = isCCM ? IL_avg + deltaIL * 0.5 : deltaIL;
+
+        // Fréquence de résonance parasite Lσ / Cpar
+        const fRes = (Lsigma > 0 && Cpar > 0) ? 1 / (2 * Math.PI * Math.sqrt(Lsigma * Cpar)) : 0;
+        const Irr = (trr > 0 && s.realistic) ? Math.min(IL_avg * 0.65, (s.Ve / Math.max(1e-9, Lsigma || 20e-9)) * trr * 0.35) : 0;
+
+        // Échantillonnage adaptatif : grille fine autour des transitions t=0, t=tOff, t=T
+        const rawTimes = new Set();
+        const addGrid = (t0, t1, steps) => {
+          for (let k = 0; k <= steps; k++) rawTimes.add(t0 + (t1 - t0) * (k / steps));
+        };
+        addGrid(-0.04 * T, 1.04 * T, 320);
+        const spanOn = Math.max(tr * 5, 250e-9);
+        const spanOff = Math.max(tf * 5, 250e-9);
+        addGrid(-spanOn * 0.3, Math.min(tOff * 0.9, spanOn), 160);
+        addGrid(Math.max(0, tOff - spanOff * 0.3), Math.min(T, tOff + spanOff), 160);
+        addGrid(T - spanOn * 0.3, 1.04 * T, 100);
+
+        const times = Array.from(rawTimes).sort((a, b) => a - b);
+        const samples = [];
+
+        let E_on = 0, E_off = 0, E_rr = 0, E_condT = 0, E_condD = 0;
+
+        for (let idx = 0; idx < times.length; idx++) {
+          const t = times[idx];
+          const tMod = ((t % T) + T) % T;
+          const gate = s.manualGate !== null ? s.manualGate : (tMod < tOff ? 1 : 0);
+
+          // Courant inductance iL(t) triangulaire (avec courbure si saturation)
+          let iL = IL_avg;
+          if (tMod <= tOff) {
+            const u = tMod / Math.max(1e-9, tOff);
+            iL = iL_min + (iL_max - iL_min) * u;
+          } else {
+            const dOff = Math.max(1e-9, T - tOff);
+            if (isCCM) {
+              const u = (tMod - tOff) / dOff;
+              iL = iL_max - (iL_max - iL_min) * u;
+            } else {
+              const dCond = Math.min(dOff, dOff * (IL_avg / Math.max(0.05, deltaIL * 0.5)));
+              const u = Math.min(1, (tMod - tOff) / Math.max(1e-9, dCond));
+              iL = iL_max * (1 - u);
+            }
+          }
+
+          // Ondulation tension sortie Vs(t)
+          const rippleV = (deltaIL * T) / (8 * Math.max(1e-7, C)) + deltaIL * ESR;
+          const vOut = Vs_mean + 0.5 * rippleV * Math.sin((2 * Math.PI * tMod) / T - Math.PI / 2);
+
+          // Calcul commutations vT, iT, vD, iD respectant strictement vT + vD = Ve et iT + iD = iL
+          let vT = 0, iT = 0, stateT = 'Bloqué', stateD = 'Passante', commType = '—';
+          const vOnT = s.realistic ? (s.switchType === 'mosfet' ? iL * Ron : (1.1 + iL * Ron * 0.4)) : 0;
+
+          if (tMod < tr) {
+            // Amorçage commandé de T
+            const u = tMod / Math.max(1e-10, tr);
+            const recBump = (s.realistic && trr > 0) ? Irr * Math.sin(Math.PI * Math.min(1, u * 1.2)) : 0;
+            iT = Math.min(iL + Irr, iL * u + recBump);
+            vT = s.Ve * (1 - u) + vOnT * u;
+            stateT = 'Commutation';
+            stateD = iT < iL ? 'Passante' : 'Commutation';
+            commType = 'Amorçage commandé T';
+          } else if (tMod < tOff) {
+            // T passant, D bloquée avec oscillations parasites post-amorçage
+            const dtRing = tMod - tr;
+            const ring = (s.realistic && fRes > 0 && dtRing < 6 / fRes)
+              ? 0.22 * s.Ve * Math.exp(-dtRing * fRes * 1.1) * Math.sin(2 * Math.PI * fRes * dtRing)
+              : 0;
+            iT = iL;
+            vT = Math.max(0, vOnT - ring);
+            stateT = 'Passant';
+            stateD = 'Bloquée';
+            commType = dtRing < tr * 3 ? 'Blocage spontané D' : 'Conduction T';
+          } else if (tMod < tOff + tf) {
+            // Blocage commandé de T (avec queue de courant si IGBT)
+            const u = (tMod - tOff) / Math.max(1e-10, tf);
+            const tail = (s.realistic && s.switchType === 'igbt') ? 0.18 * iL * (1 - u) : 0;
+            iT = Math.max(0, iL * (1 - u) + tail);
+            vT = vOnT + (s.Ve - vOnT) * u;
+            stateT = 'Commutation';
+            stateD = vT > s.Ve * 0.9 ? 'Commutation' : 'Bloquée';
+            commType = 'Blocage commandé T';
+          } else {
+            // D passante, T bloqué avec surtension Lσ·di/dt au blocage de T
+            const dtRing = tMod - (tOff + tf);
+            const overshoot = (s.realistic && Lsigma > 0)
+              ? Math.min(0.45 * s.Ve, (Lsigma * iL) / Math.max(5e-9, tf))
+              : 0;
+            const ring = (s.realistic && fRes > 0 && dtRing < 6 / fRes)
+              ? overshoot * Math.exp(-dtRing * fRes * 1.1) * Math.cos(2 * Math.PI * fRes * dtRing)
+              : 0;
+            iT = 0;
+            vT = s.Ve + ring;
+            stateT = 'Bloqué';
+            stateD = iL > 0.01 ? 'Passante' : 'Bloquée (DCM)';
+            commType = dtRing < tf * 3 ? 'Amorçage spontané D' : 'Roue libre D';
+          }
+
+          // Lois fondamentales vérifiées à chaque pas :
+          const vD = s.Ve - vT;
+          const iD = iL - iT;
+          const pT = Math.max(0, vT * iT);
+          const pD = Math.max(0, -vD * iD);
+
+          samples.push({ t, tMod, gate, vT, iT, vD, iD, iL, vOut, pT, pD, stateT, stateD, commType });
+
+          if (idx > 0) {
+            const dt = times[idx] - times[idx - 1];
+            const prev = samples[idx - 1];
+            const pT_avg = 0.5 * (prev.pT + pT);
+            const pD_avg = 0.5 * (prev.pD + pD);
+            if (tMod < tr) E_on += pT_avg * dt;
+            else if (tMod >= tOff && tMod < tOff + tf) E_off += pT_avg * dt;
+            else E_condT += pT_avg * dt;
+
+            if (tMod < tr + trr) E_rr += pD_avg * dt;
+            else E_condD += pD_avg * dt;
+          }
+        }
+
+        // Bilan de pertes moyennes (W) sur une période T
+        const P_condT = E_condT / T;
+        const P_swT = (E_on + E_off) / T;
+        const P_D = (E_condD + E_rr) / T;
+        const P_L = IL_avg * IL_avg * RL;
+        const P_C = (deltaIL * deltaIL / 12) * ESR;
+        const P_tot = P_condT + P_swT + P_D + P_L + P_C;
+        const P_out = Vs_mean * (Vs_mean / R);
+        const efficiency = P_out > 0 ? Math.min(99.9, (P_out / (P_out + P_tot)) * 100) : 0;
+
+        // Températures de jonction estimées
+        const Tj_T = s.Tamb + (P_condT + P_swT) * s.RthT;
+        const Tj_D = s.Tamb + P_D * s.RthD;
+
+        this.data = {
+          T, tOff, tr, tf, samples,
+          Vs_theo, Vs_mean, IL_avg, deltaIL, isCCM,
+          E_on, E_off, E_rr,
+          losses: { P_condT, P_swT, P_D, P_L, P_C, P_tot, efficiency },
+          thermal: { Tj_T, Tj_D }
+        };
+        return this.data;
+      },
+
+      sampleAt(progress) {
+        const d = this.data;
+        if (!d || !d.samples.length) return null;
+        const tTarget = d.samples[0].t + progress * (d.samples[d.samples.length - 1].t - d.samples[0].t);
+        let best = d.samples[0];
+        let minDiff = Math.abs(best.t - tTarget);
+        for (let i = 1; i < d.samples.length; i++) {
+          const diff = Math.abs(d.samples[i].t - tTarget);
+          if (diff < minDiff) { minDiff = diff; best = d.samples[i]; }
+        }
+        return best;
+      }
+    };
+
+    /* --------------------------------------------------------------------------
+     * MODULE 3 : RENDU DU SCHÉMA SVG ANIMÉ
+     * -------------------------------------------------------------------------- */
+    const SchematicRenderer = {
+      currentTopo: null,
+      flowPhase: 0,
+
+      buildSvg(topo) {
+        this.currentTopo = topo;
+        const svg = document.getElementById('circuitSvg');
+        const labelTopo = {
+          buck: 'Cellule Buck (T série, D parallèle)',
+          boost: 'Cellule Boost (L entrée, T bas, D sortie)',
+          buckboost: 'Cellule Buck-Boost (T entrée, L parallèle, D sortie)',
+          halfbridge: 'Bras Demi-Pont (T1 haut, T2 bas synchrones)'
+        }[topo];
+
+        svg.innerHTML = `
+          <defs>
+            <marker id="arrRed" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626"/>
+            </marker>
+            <marker id="arrOrange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#ea580c"/>
+            </marker>
+            <marker id="arrGreen" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"/>
+            </marker>
+          </defs>
+          <text x="230" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">${labelTopo}</text>
+
+          <!-- Connexions principales -->
+          <polyline points="55,75 55,42 125,42" fill="none" stroke="#64748b" stroke-width="2.5"/>
+          <polyline points="200,42 265,42" fill="none" stroke="#64748b" stroke-width="2.5"/>
+          <polyline points="340,42 405,42 405,78" fill="none" stroke="#64748b" stroke-width="2.5"/>
+          <polyline points="55,145 55,195 405,195 405,152" fill="none" stroke="#64748b" stroke-width="2.5"/>
+          <line x1="225" y1="42" x2="225" y2="90" stroke="#64748b" stroke-width="2.5"/>
+          <line x1="225" y1="145" x2="225" y2="195" stroke="#64748b" stroke-width="2.5"/>
+          <circle cx="225" cy="42" r="4" fill="#334155"/>
+          <circle cx="225" cy="195" r="4" fill="#334155"/>
+
+          <!-- Source Ve -->
+          <circle cx="55" cy="110" r="30" fill="#ffffff" stroke="#334155" stroke-width="2.5"/>
+          <text x="55" y="106" text-anchor="middle" font-size="12" font-weight="bold" fill="#0f172a">Ve</text>
+          <text id="svgVeTxt" x="55" y="122" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="bold">48 V</text>
+
+          <!-- Interrupteur T -->
+          <rect id="svgBoxT" x="125" y="22" width="75" height="40" rx="7" fill="#f1f5f9" stroke="#64748b" stroke-width="2.5"/>
+          <text x="162" y="40" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">T</text>
+          <text id="svgTxtT" x="162" y="54" text-anchor="middle" font-size="9" font-weight="bold" fill="#475569">BLOQUÉ</text>
+
+          <!-- Diode D -->
+          <rect id="svgBoxD" x="195" y="90" width="60" height="55" rx="7" fill="#f1f5f9" stroke="#64748b" stroke-width="2.5"/>
+          <polygon id="svgPolyD" points="214,132 236,132 225,110" fill="#64748b"/>
+          <line id="svgBarD" x1="212" y1="110" x2="238" y2="110" stroke="#64748b" stroke-width="3"/>
+          <text x="245" y="104" font-size="10" font-weight="bold" fill="#0f172a">D</text>
+
+          <!-- Inductance L -->
+          <rect x="265" y="28" width="75" height="28" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+          <text x="302" y="46" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">L</text>
+
+          <!-- Condensateur C & Charge R -->
+          <line x1="365" y1="42" x2="365" y2="105" stroke="#64748b" stroke-width="2"/>
+          <line x1="353" y1="105" x2="377" y2="105" stroke="#0f172a" stroke-width="3"/>
+          <line x1="353" y1="115" x2="377" y2="115" stroke="#0f172a" stroke-width="3"/>
+          <line x1="365" y1="115" x2="365" y2="195" stroke="#64748b" stroke-width="2"/>
+          <text x="346" y="114" font-size="10" font-weight="bold" fill="#475569">C</text>
+
+          <rect x="390" y="78" width="30" height="74" rx="5" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+          <text x="405" y="118" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f172a">Z</text>
+          <text id="svgVsTxt" x="405" y="212" text-anchor="middle" font-size="10" font-weight="bold" fill="#0284c7">Vs = 12.0 V</text>
+
+          <!-- Flèches de courants animées -->
+          <line id="svgFlowIT" x1="72" y1="32" x2="116" y2="32" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arrRed)"/>
+          <text id="svgValIT" x="94" y="25" text-anchor="middle" font-size="9" font-weight="bold" fill="#dc2626">iT</text>
+
+          <line id="svgFlowID" x1="264" y1="142" x2="264" y2="95" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arrOrange)"/>
+          <text id="svgValID" x="288" y="122" font-size="9" font-weight="bold" fill="#ea580c">iD</text>
+
+          <line id="svgFlowIL" x1="268" y1="20" x2="335" y2="20" stroke="#059669" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arrGreen)"/>
+          <text id="svgValIL" x="302" y="13" text-anchor="middle" font-size="9" font-weight="bold" fill="#059669">iL</text>
+
+          <!-- Valeurs vT et vD -->
+          <text id="svgValVT" x="162" y="75" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563eb">vT = 48.0 V</text>
+          <text id="svgValVD" x="160" y="122" text-anchor="middle" font-size="10" font-weight="bold" fill="#7c3aed">vD = 0.0 V</text>
+        `;
+      },
+
+      update(pt, dtReal) {
+        if (this.currentTopo !== SimState.topology) this.buildSvg(SimState.topology);
+        this.flowPhase = (this.flowPhase + dtReal * 40) % 18;
+
+        const colorMap = {
+          'Passant': { stroke: '#16a34a', fill: '#dcfce7' },
+          'Passante': { stroke: '#16a34a', fill: '#dcfce7' },
+          'Commutation': { stroke: '#f97316', fill: '#ffedd5' },
+          'Bloqué': { stroke: '#64748b', fill: '#f1f5f9' },
+          'Bloquée': { stroke: '#64748b', fill: '#f1f5f9' },
+          'Bloquée (DCM)': { stroke: '#64748b', fill: '#f1f5f9' }
+        };
+
+        const cT = colorMap[pt.stateT] || colorMap['Bloqué'];
+        const boxT = document.getElementById('svgBoxT');
+        boxT.setAttribute('stroke', cT.stroke);
+        boxT.setAttribute('fill', cT.fill);
+        document.getElementById('svgTxtT').textContent = pt.stateT.toUpperCase();
+
+        const cD = colorMap[pt.stateD] || colorMap['Bloquée'];
+        const boxD = document.getElementById('svgBoxD');
+        boxD.setAttribute('stroke', cD.stroke);
+        boxD.setAttribute('fill', cD.fill);
+        document.getElementById('svgPolyD').setAttribute('fill', cD.stroke);
+        document.getElementById('svgBarD').setAttribute('stroke', cD.stroke);
+
+        document.getElementById('svgVeTxt').textContent = `${SimState.Ve} V`;
+        document.getElementById('svgVsTxt').textContent = `Vs = ${pt.vOut.toFixed(1)} V`;
+        document.getElementById('svgValVT').textContent = `vT = ${pt.vT.toFixed(1)} V`;
+        document.getElementById('svgValVD').textContent = `vD = ${pt.vD.toFixed(1)} V`;
+        document.getElementById('svgValIT').textContent = `iT=${pt.iT.toFixed(1)}A`;
+        document.getElementById('svgValID').textContent = `iD=${pt.iD.toFixed(1)}A`;
+        document.getElementById('svgValIL').textContent = `iL=${pt.iL.toFixed(1)}A`;
+
+        const iRef = Math.max(1, PhysicsEngine.data.IL_avg);
+        const setFlow = (id, cur) => {
+          const el = document.getElementById(id);
+          const ratio = Math.min(2, Math.abs(cur) / iRef);
+          el.style.opacity = ratio > 0.03 ? 1 : 0.15;
+          el.setAttribute('stroke-width', 1.5 + 2.2 * ratio);
+          el.setAttribute('stroke-dashoffset', -this.flowPhase * Math.sign(cur || 1));
+        };
+        setFlow('svgFlowIT', pt.iT);
+        setFlow('svgFlowID', pt.iD);
+        setFlow('svgFlowIL', pt.iL);
+      }
+    };
+
+    /* --------------------------------------------------------------------------
+     * MODULE 4 : OSCILLOSCOPE MULTIVOIE SYNCHRONISÉ (ZOOM / PAN / TACTILE)
+     * -------------------------------------------------------------------------- */
+    class MultiScope {
+      constructor() {
+        this.viewStart = 0;
+        this.viewEnd = 1;
+        this.canvases = ['scopeGate', 'scopeT', 'scopeD', 'scopeLoad', 'scopePower'].map(id => document.getElementById(id));
+      }
+
+      zoom(factor, centerRel = 0.5) {
+        const span = this.viewEnd - this.viewStart;
+        const center = this.viewStart + centerRel * span;
+        const newSpan = Math.min(1, Math.max(0.015, span * factor));
+        this.viewStart = Math.max(0, center - centerRel * newSpan);
+        this.viewEnd = Math.min(1, this.viewStart + newSpan);
+        if (this.viewEnd - this.viewStart < newSpan) this.viewStart = Math.max(0, this.viewEnd - newSpan);
+      }
+
+      pan(deltaRel) {
+        const span = this.viewEnd - this.viewStart;
+        let ns = this.viewStart + deltaRel * span;
+        let ne = ns + span;
+        if (ns < 0) { ns = 0; ne = span; }
+        if (ne > 1) { ne = 1; ns = 1 - span; }
+        this.viewStart = ns;
+        this.viewEnd = ne;
+      }
+
+      zoomToEvent(evtType) {
+        const d = PhysicsEngine.data;
+        if (!d) return;
+        const t0 = d.samples[0].t;
+        const tSpan = d.samples[d.samples.length - 1].t - t0;
+        let targetT = 0;
+        if (evtType === 'ON_T') targetT = 0;
+        else if (evtType === 'OFF_D') targetT = d.tr;
+        else if (evtType === 'OFF_T') targetT = d.tOff;
+        else if (evtType === 'ON_D') targetT = d.tOff + d.tf;
+
+        const winWidth = Math.max(d.tr * 6, d.tf * 6, 300e-9);
+        const relCenter = (targetT - t0) / tSpan;
+        const relHalf = Math.min(0.25, (winWidth * 0.5) / tSpan);
+        this.viewStart = Math.max(0, relCenter - relHalf);
+        this.viewEnd = Math.min(1, relCenter + relHalf);
+        SimState.progress = relCenter;
+      }
+
+      drawAll() {
+        const d = PhysicsEngine.data;
+        if (!d) return;
+        const samples = d.samples;
+        const tMinAll = samples[0].t;
+        const tMaxAll = samples[samples.length - 1].t;
+        const tStart = tMinAll + this.viewStart * (tMaxAll - tMinAll);
+        const tEnd = tMinAll + this.viewEnd * (tMaxAll - tMinAll);
+        const vis = samples.filter(s => s.t >= tStart && s.t <= tEnd);
+        if (vis.length < 2) return;
+
+        const maxI = Math.max(2, d.IL_avg * 1.6);
+        const maxV = Math.max(10, SimState.Ve * 1.35);
+        const maxOutV = Math.max(10, d.Vs_mean * 1.4, SimState.Ve * 1.1);
+        const maxP = Math.max(20, SimState.Ve * maxI * 0.7);
+
+        this.renderChannel(this.canvases[0], vis, tStart, tEnd, {
+          min1: -0.15, max1: 1.25, c1: '#0f172a', fn1: s => s.gate, lbl1: ['0', '1']
+        });
+        this.renderChannel(this.canvases[1], vis, tStart, tEnd, {
+          min1: -maxV * 0.08, max1: maxV, c1: '#2563eb', fn1: s => s.vT, lbl1: ['0V', `${maxV.toFixed(0)}V`],
+          min2: -maxI * 0.08, max2: maxI, c2: '#dc2626', fn2: s => s.iT, lbl2: ['0A', `${maxI.toFixed(1)}A`]
+        });
+        this.renderChannel(this.canvases[2], vis, tStart, tEnd, {
+          min1: -maxV, max1: maxV * 0.25, c1: '#7c3aed', fn1: s => s.vD, lbl1: [`-${maxV.toFixed(0)}V`, '0V'],
+          min2: -maxI * 0.08, max2: maxI, c2: '#ea580c', fn2: s => s.iD, lbl2: ['0A', `${maxI.toFixed(1)}A`]
+        });
+        this.renderChannel(this.canvases[3], vis, tStart, tEnd, {
+          min1: 0, max1: maxI, c1: '#059669', fn1: s => s.iL, lbl1: ['0A', `${maxI.toFixed(1)}A`],
+          min2: 0, max2: maxOutV, c2: '#0284c7', fn2: s => s.vOut, lbl2: ['0V', `${maxOutV.toFixed(0)}V`]
+        });
+        this.renderChannel(this.canvases[4], vis, tStart, tEnd, {
+          min1: 0, max1: maxP, c1: '#e11d48', fn1: s => s.pT, lbl1: ['0W', `${maxP.toFixed(0)}W`],
+          min2: 0, max2: maxP, c2: '#d97706', fn2: s => s.pD, lbl2: ['0W', `${maxP.toFixed(0)}W`]
+        });
+      }
+
+      renderChannel(canvas, vis, tStart, tEnd, cfg) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+        const targetW = Math.round(rect.width * dpr);
+        const targetH = Math.round(rect.height * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.scale(dpr, dpr);
+
+        const W = rect.width;
+        const H = rect.height;
+        const padL = 46, padR = 46, padT = 8, padB = 15;
+        const pW = W - padL - padR;
+        const pH = H - padT - padB;
+        ctx.clearRect(0, 0, W, H);
+
+        // Grille
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 3; i++) {
+          const y = padT + (pH * i) / 3;
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + pW, y); ctx.stroke();
+        }
+
+        // Graduations
+        ctx.font = '10px monospace';
+        ctx.fillStyle = cfg.c1;
+        ctx.textAlign = 'right';
+        ctx.fillText(cfg.lbl1[1], padL - 4, padT + 8);
+        ctx.fillText(cfg.lbl1[0], padL - 4, padT + pH);
+
+        if (cfg.fn2) {
+          ctx.fillStyle = cfg.c2;
+          ctx.textAlign = 'left';
+          ctx.fillText(cfg.lbl2[1], padL + pW + 4, padT + 8);
+          ctx.fillText(cfg.lbl2[0], padL + pW + 4, padT + pH);
+        }
+
+        // Temps en bas
+        ctx.fillStyle = '#64748b';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${(tStart * 1e6).toFixed(2)}µs`, padL, H - 3);
+        ctx.fillText(`${(tEnd * 1e6).toFixed(2)}µs`, padL + pW, H - 3);
+
+        const xOf = t => padL + ((t - tStart) / Math.max(1e-12, tEnd - tStart)) * pW;
+        const y1Of = v => padT + ((cfg.max1 - v) / Math.max(1e-9, cfg.max1 - cfg.min1)) * pH;
+
+        ctx.strokeStyle = cfg.c1;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        vis.forEach((s, i) => {
+          const x = xOf(s.t), y = y1Of(cfg.fn1(s));
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        if (cfg.fn2) {
+          const y2Of = v => padT + ((cfg.max2 - v) / Math.max(1e-9, cfg.max2 - cfg.min2)) * pH;
+          ctx.strokeStyle = cfg.c2;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          vis.forEach((s, i) => {
+            const x = xOf(s.t), y = y2Of(cfg.fn2(s));
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        }
+
+        // Curseur synchronisé
+        const all = PhysicsEngine.data.samples;
+        const tCur = all[0].t + SimState.progress * (all[all.length - 1].t - all[0].t);
+        if (tCur >= tStart && tCur <= tEnd) {
+          const cx = xOf(tCur);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(cx, padT);
+          ctx.lineTo(cx, padT + pH);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+     * MODULE 5 : GRAPHIQUES D'ANALYSE (PERTES, FFT, SOA) AVEC FALLBACK HORS-LIGNE
+     * -------------------------------------------------------------------------- */
+    const AnalysisCharts = {
+      charts: {},
+
+      updateAll() {
+        const d = PhysicsEngine.data;
+        if (!d) return;
+        document.getElementById('txtEnergySummary').textContent =
+          `Eon: ${(d.E_on * 1e6).toFixed(2)} µJ | Eoff: ${(d.E_off * 1e6).toFixed(2)} µJ | Err: ${(d.E_rr * 1e6).toFixed(2)} µJ`;
+
+        this.renderLosses(d.losses);
+        this.renderFft(d.samples);
+        this.renderSoa(d.samples);
+      },
+
+      renderLosses(L) {
+        const labels = ['Cond. T', 'Comm. T', 'Diode D', 'Bobine L', 'ESR C'];
+        const values = [L.P_condT, L.P_swT, L.P_D, L.P_L, L.P_C].map(v => +v.toFixed(3));
+        const colors = ['#2563eb', '#dc2626', '#ea580c', '#059669', '#7c3aed'];
+
+        if (window.Chart) {
+          if (this.charts.bar) this.charts.bar.destroy();
+          this.charts.bar = new Chart(document.getElementById('chartLossesBar'), {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Pertes (W)', data: values, backgroundColor: colors, borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
+
+          if (this.charts.pie) this.charts.pie.destroy();
+          this.charts.pie = new Chart(document.getElementById('chartLossesPie'), {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+          });
+        }
+      },
+
+      renderFft(samples) {
+        const sigKey = document.getElementById('selFftSignal').value;
+        const winType = document.getElementById('selFftWindow').value;
+        const N = 128;
+        const signal = [];
+        for (let i = 0; i < N; i++) {
+          const idx = Math.floor((i / N) * samples.length);
+          const w = winType === 'hann' ? 0.5 * (1 - Math.cos((2 * Math.PI * i) / (N - 1))) : 1;
+          signal.push(samples[idx][sigKey] * w);
+        }
+
+        const mags = [];
+        const harmLabels = [];
+        for (let k = 0; k < 24; k++) {
+          let re = 0, im = 0;
+          for (let n = 0; n < N; n++) {
+            const ang = (2 * Math.PI * k * n) / N;
+            re += signal[n] * Math.cos(ang);
+            im -= signal[n] * Math.sin(ang);
+          }
+          mags.push(+((2 / N) * Math.hypot(re, im)).toFixed(3));
+          harmLabels.push(k === 0 ? 'DC' : `H${k}`);
+        }
+
+        if (window.Chart) {
+          if (this.charts.fft) this.charts.fft.destroy();
+          this.charts.fft = new Chart(document.getElementById('chartFft'), {
+            type: 'bar',
+            data: { labels: harmLabels, datasets: [{ label: 'Amplitude harmonique', data: mags, backgroundColor: '#0284c7' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          });
+        }
+      },
+
+      renderSoa(samples) {
+        const pts = samples.filter((_, i) => i % 3 === 0).map(s => ({ x: +s.vT.toFixed(2), y: +s.iT.toFixed(2) }));
+        const maxV = SimState.Ve * 1.4;
+        const maxI = Math.max(10, PhysicsEngine.data.IL_avg * 2);
+        const soaLimit = [
+          { x: 0, y: maxI },
+          { x: maxV * 0.5, y: maxI },
+          { x: maxV, y: maxI * 0.35 },
+          { x: maxV, y: 0 }
+        ];
+
+        if (window.Chart) {
+          if (this.charts.soa) this.charts.soa.destroy();
+          this.charts.soa = new Chart(document.getElementById('chartSoa'), {
+            type: 'scatter',
+            data: {
+              datasets: [
+                { label: 'Trajectoire (vT, iT)', data: pts, showLine: true, borderColor: '#2563eb', backgroundColor: '#2563eb', pointRadius: 1.5, borderWidth: 2 },
+                { label: 'Limite SOA', data: soaLimit, showLine: true, borderColor: '#dc2626', borderDash: [5, 4], pointRadius: 0, fill: false }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: { title: { display: true, text: 'vT (V)', font: { size: 10 } } },
+                y: { title: { display: true, text: 'iT (A)', font: { size: 10 } } }
+              }
+            }
+          });
+        }
+      }
+    };
+
+    /* --------------------------------------------------------------------------
+     * MODULE 6 : CONTRÔLEUR D'INTERFACE & BOUCLE TEMPS RÉEL
+     * -------------------------------------------------------------------------- */
+    const App = {
+      scope: null,
+      lastTime: performance.now(),
+
+      init() {
+        this.scope = new MultiScope();
+        SchematicRenderer.buildSvg(SimState.topology);
+        this.bindControls();
+        this.recomputeAll();
+        requestAnimationFrame(t => this.loop(t));
+      },
+
+      recomputeAll() {
+        const d = PhysicsEngine.compute();
+        document.getElementById('valRegime').textContent = d.isCCM ? 'CCM (Continu)' : 'DCM (Discontinu)';
+        document.getElementById('valVsCompare').textContent = `${d.Vs_mean.toFixed(1)}V / ${d.Vs_theo.toFixed(1)}V`;
+        document.getElementById('valDeltaIL').textContent = `${d.deltaIL.toFixed(2)} A`;
+        document.getElementById('valEfficiency').textContent = `${d.losses.efficiency.toFixed(1)} %`;
+
+        const overTemp = d.thermal.Tj_T > SimState.TjMax || d.thermal.Tj_D > SimState.TjMax;
+        document.getElementById('badgeThermalAlert').classList.toggle('hidden', !overTemp);
+        AnalysisCharts.updateAll();
+      },
+
+      updateDynamicTable(pt) {
+        const d = PhysicsEngine.data;
+        const tbody = document.getElementById('stateTableBody');
+        const badge = (st) => {
+          const cls = (st === 'Passant' || st === 'Passante')
+            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+            : st === 'Commutation'
+              ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+              : 'bg-slate-500/15 text-slate-600 dark:text-slate-300';
+          return `<span class="px-1.5 py-0.5 rounded font-bold ${cls}">${st}</span>`;
+        };
+        tbody.innerHTML = `
+          <tr>
+            <td class="py-1 pr-2 font-bold text-blue-600">Transistor T</td>
+            <td class="py-1 px-1">${badge(pt.stateT)}</td>
+            <td class="py-1 px-1">${pt.commType}</td>
+            <td class="py-1 px-1 text-right">${pt.vT.toFixed(1)}V / ${pt.iT.toFixed(1)}A</td>
+            <td class="py-1 pl-1 text-right">${pt.pT.toFixed(0)}W / ${d.thermal.Tj_T.toFixed(0)}°C</td>
+          </tr>
+          <tr>
+            <td class="py-1 pr-2 font-bold text-violet-600">Diode D</td>
+            <td class="py-1 px-1">${badge(pt.stateD)}</td>
+            <td class="py-1 px-1">${pt.stateD === 'Passante' ? 'Spontanée' : 'Inverse'}</td>
+            <td class="py-1 px-1 text-right">${pt.vD.toFixed(1)}V / ${pt.iD.toFixed(1)}A</td>
+            <td class="py-1 pl-1 text-right">${pt.pD.toFixed(0)}W / ${d.thermal.Tj_D.toFixed(0)}°C</td>
+          </tr>
+        `;
+      },
+
+      loop(now) {
+        const dtReal = (now - this.lastTime) / 1000;
+        this.lastTime = now;
+
+        if (SimState.playing) {
+          SimState.progress = (SimState.progress + dtReal * 0.35 * SimState.speed) % 1;
+        }
+
+        const pt = PhysicsEngine.sampleAt(SimState.progress);
+        if (pt) {
+          document.getElementById('lblCursorTime').textContent = `t = ${(pt.t * 1e6).toFixed(2)} µs`;
+          SchematicRenderer.update(pt, dtReal);
+          this.updateDynamicTable(pt);
+        }
+        this.scope.drawAll();
+        requestAnimationFrame(t => this.loop(t));
+      },
+
+      bindControls() {
+        // Onglets paramètres
+        document.querySelectorAll('[data-tab]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.param-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+          });
+        });
+
+        // Onglets analyse
+        document.querySelectorAll('[data-analysis]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-analysis]').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.analysis-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.analysis).classList.add('active');
+            AnalysisCharts.updateAll();
+          });
+        });
+
+        // Liaison générique des curseurs
+        const sliders = [
+          ['rngVe', 'txtVe', 'Ve'], ['rngAlpha', 'txtAlpha', 'alpha'], ['rngFreq', 'txtFreq', 'freqKhz'],
+          ['rngL', 'txtL', 'L_uH'], ['rngC', 'txtC', 'C_uF'], ['rngR', 'txtR', 'R_ohm'],
+          ['rngEload', 'txtEload', 'E_load'], ['rngDeadTime', 'txtDeadTime', 'deadTime_ns'],
+          ['rngRon', 'txtRon', 'Ron_mOhm'], ['rngTr', 'txtTr', 'tr_ns'], ['rngTf', 'txtTf', 'tf_ns'],
+          ['rngCoss', 'txtCoss', 'Coss_pF'], ['rngVf', 'txtVf', 'Vf'], ['rngRd', 'txtRd', 'Rd_mOhm'],
+          ['rngTrr', 'txtTrr', 'trr_ns'], ['rngCj', 'txtCj', 'Cj_pF'], ['rngLsigma', 'txtLsigma', 'Lsigma_nH'],
+          ['rngRL', 'txtRL', 'RL_mOhm'], ['rngESR', 'txtESR', 'ESR_mOhm'], ['rngIsat', 'txtIsat', 'Isat_A'],
+          ['rngTamb', 'txtTamb', 'Tamb'], ['rngTjMax', 'txtTjMax', 'TjMax'],
+          ['rngRthT', 'txtRthT', 'RthT'], ['rngRthD', 'txtRthD', 'RthD']
+        ];
+        sliders.forEach(([rngId, txtId, key]) => {
+          const el = document.getElementById(rngId);
+          el.addEventListener('input', () => {
+            SimState[key] = parseFloat(el.value);
+            document.getElementById(txtId).textContent = el.value;
+            this.recomputeAll();
+          });
+        });
+
+        // Sélecteurs & Modes
+        document.getElementById('selTopology').addEventListener('change', e => {
+          SimState.topology = e.target.value;
+          SchematicRenderer.buildSvg(SimState.topology);
+          this.recomputeAll();
+        });
+
+        document.getElementById('selPreset').addEventListener('change', e => {
+          const presets = {
+            buck_48_12: { topology: 'buck', Ve: 48, alpha: 0.25, freqKhz: 100, R_ohm: 1.2 },
+            boost_12_48: { topology: 'boost', Ve: 12, alpha: 0.75, freqKhz: 100, R_ohm: 12 },
+            buckboost_24_24: { topology: 'buckboost', Ve: 24, alpha: 0.50, freqKhz: 80, R_ohm: 6 },
+            halfbridge_400_200: { topology: 'halfbridge', Ve: 400, alpha: 0.50, freqKhz: 50, R_ohm: 20 }
+          };
+          const p = presets[e.target.value];
+          if (p) {
+            Object.assign(SimState, p);
+            document.getElementById('selTopology').value = p.topology;
+            document.getElementById('rngVe').value = p.Ve; document.getElementById('txtVe').textContent = p.Ve;
+            document.getElementById('rngAlpha').value = p.alpha; document.getElementById('txtAlpha').textContent = p.alpha;
+            document.getElementById('rngFreq').value = p.freqKhz; document.getElementById('txtFreq').textContent = p.freqKhz;
+            document.getElementById('rngR').value = p.R_ohm; document.getElementById('txtR').textContent = p.R_ohm;
+            SchematicRenderer.buildSvg(SimState.topology);
+            this.recomputeAll();
+          }
+        });
+
+        document.getElementById('chkRealistic').addEventListener('change', e => {
+          SimState.realistic = e.target.checked;
+          document.getElementById('lblModelMode').textContent = SimState.realistic
+            ? 'Réaliste (pertes & parasites)'
+            : 'Idéal (sans pertes ni parasites)';
+          this.recomputeAll();
+        });
+
+        ['selSwitchType', 'selDiodeType'].forEach(id => {
+          document.getElementById(id).addEventListener('change', e => {
+            SimState[id === 'selSwitchType' ? 'switchType' : 'diodeType'] = e.target.value;
+            this.recomputeAll();
+          });
+        });
+
+        ['selFftSignal', 'selFftWindow'].forEach(id => {
+          document.getElementById(id).addEventListener('change', () => AnalysisCharts.updateAll());
+        });
+
+        // Contrôles Lecture / Pause / Pas à pas / Reset / Commandes manuelles
+        const btnPlay = document.getElementById('btnPlay');
+        btnPlay.addEventListener('click', () => {
+          SimState.playing = !SimState.playing;
+          btnPlay.textContent = SimState.playing ? 'Pause' : 'Lecture';
+        });
+        document.getElementById('btnStep').addEventListener('click', () => {
+          SimState.playing = false;
+          btnPlay.textContent = 'Lecture';
+          SimState.progress = (SimState.progress + 0.01) % 1;
+        });
+        document.getElementById('btnReset').addEventListener('click', () => {
+          SimState.progress = 0;
+          SimState.manualGate = null;
+          this.scope.viewStart = 0;
+          this.scope.viewEnd = 1;
+          this.recomputeAll();
+        });
+        document.getElementById('selSpeed').addEventListener('change', e => {
+          SimState.speed = parseFloat(e.target.value);
+        });
+        document.getElementById('btnGateOn').addEventListener('click', () => {
+          SimState.manualGate = 1;
+          this.recomputeAll();
+        });
+        document.getElementById('btnGateOff').addEventListener('click', () => {
+          SimState.manualGate = 0;
+          this.recomputeAll();
+        });
+
+        // Zoom oscilloscope
+        document.getElementById('btnZoomEvent').addEventListener('click', () => {
+          this.scope.zoomToEvent(document.getElementById('selZoomEvent').value);
+        });
+        document.getElementById('btnZoomIn').addEventListener('click', () => this.scope.zoom(0.5, 0.5));
+        document.getElementById('btnZoomOut').addEventListener('click', () => this.scope.zoom(2.0, 0.5));
+        document.getElementById('btnZoomReset').addEventListener('click', () => {
+          this.scope.viewStart = 0; this.scope.viewEnd = 1;
+        });
+
+        // Thème clair / sombre
+        document.getElementById('btnThemeToggle').addEventListener('click', e => {
+          document.body.classList.toggle('dark');
+          e.target.textContent = document.body.classList.contains('dark') ? 'Thème Clair' : 'Thème Sombre';
+        });
+
+        // Exports CSV & PNG
+        document.getElementById('btnExportCsv').addEventListener('click', () => {
+          const rows = ['t_us;gate;vT_V;iT_A;vD_V;iD_A;iL_A;vOut_V;pT_W;pD_W'];
+          PhysicsEngine.data.samples.forEach(s => {
+            rows.push([
+              (s.t * 1e6).toFixed(4), s.gate, s.vT.toFixed(2), s.iT.toFixed(3),
+              s.vD.toFixed(2), s.iD.toFixed(3), s.iL.toFixed(3), s.vOut.toFixed(2),
+              s.pT.toFixed(2), s.pD.toFixed(2)
+            ].join(';'));
+          });
+          const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `simulation_${SimState.topology}.csv`;
+          a.click();
+        });
+
+        document.getElementById('btnExportPng').addEventListener('click', () => {
+          const out = document.createElement('canvas');
+          const cList = this.scope.canvases;
+          out.width = cList[0].width;
+          out.height = cList.reduce((acc, c) => acc + c.height + 8, 0);
+          const ctx = out.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, out.width, out.height);
+          let y = 0;
+          cList.forEach(c => { ctx.drawImage(c, 0, y); y += c.height + 8; });
+          const a = document.createElement('a');
+          a.href = out.toDataURL('image/png');
+          a.download = `chronogrammes_${SimState.topology}.png`;
+          a.click();
+        });
+
+        // Interactions souris & tactile sur les chronogrammes
+        this.scope.canvases.forEach(canvas => {
+          let isPanning = false, lastX = 0, moved = false;
+
+          canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const rel = Math.min(1, Math.max(0, (e.clientX - rect.left - 46) / (rect.width - 92)));
+            this.scope.zoom(e.deltaY > 0 ? 1.25 : 0.8, rel);
+          }, { passive: false });
+
+          canvas.addEventListener('mousedown', e => {
+            isPanning = true; lastX = e.clientX; moved = false;
+          });
+          window.addEventListener('mousemove', e => {
+            if (!isPanning) return;
+            const dx = e.clientX - lastX;
+            if (Math.abs(dx) > 3) {
+              moved = true;
+              const rect = canvas.getBoundingClientRect();
+              this.scope.pan(-dx / Math.max(100, rect.width - 92));
+              lastX = e.clientX;
+            }
+          });
+          window.addEventListener('mouseup', e => {
+            if (!isPanning) return;
+            isPanning = false;
+            if (!moved) {
+              const rect = canvas.getBoundingClientRect();
+              const rel = Math.min(1, Math.max(0, (e.clientX - rect.left - 46) / (rect.width - 92)));
+              SimState.playing = false; btnPlay.textContent = 'Lecture';
+              SimState.progress = this.scope.viewStart + rel * (this.scope.viewEnd - this.scope.viewStart);
+            }
+          });
+
+          // Support tactile Android / Écrans tactiles (glisser + pincement zoom)
+          let touchStartX = 0, touchMoved = false, initialPinchDist = 0;
+          canvas.addEventListener('touchstart', e => {
+            if (e.touches.length === 1) {
+              touchStartX = e.touches[0].clientX;
+              touchMoved = false;
+            } else if (e.touches.length === 2) {
+              initialPinchDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+              );
+            }
+          }, { passive: true });
+
+          canvas.addEventListener('touchmove', e => {
+            if (e.touches.length === 1) {
+              const dx = e.touches[0].clientX - touchStartX;
+              if (Math.abs(dx) > 4) {
+                touchMoved = true;
+                const rect = canvas.getBoundingClientRect();
+                this.scope.pan(-dx / Math.max(100, rect.width - 92));
+                touchStartX = e.touches[0].clientX;
+              }
+            } else if (e.touches.length === 2 && initialPinchDist > 0) {
+              const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+              );
+              const factor = initialPinchDist / Math.max(10, dist);
+              this.scope.zoom(Math.min(1.4, Math.max(0.7, factor)), 0.5);
+              initialPinchDist = dist;
+            }
+          }, { passive: true });
+
+          canvas.addEventListener('touchend', e => {
+            if (!touchMoved && e.changedTouches.length === 1) {
+              const rect = canvas.getBoundingClientRect();
+              const rel = Math.min(1, Math.max(0, (e.changedTouches[0].clientX - rect.left - 46) / (rect.width - 92)));
+              SimState.playing = false; btnPlay.textContent = 'Lecture';
+              SimState.progress = this.scope.viewStart + rel * (this.scope.viewEnd - this.scope.viewStart);
+            }
+          });
+        });
+
+        // Gestion de la modale d'installation PWA (PC & Android)
+        PWAManager.bindUI();
+      }
+    };
+
+    window.onload = () => {
+      PWAManager.init();
+      App.init();
+    };
+
+    /* --------------------------------------------------------------------------
+     * MODULE 9 : GESTIONNAIRE PWA (MANIFESTE DYNAMIQUE, SERVICE WORKER & APK PACK)
+     * -------------------------------------------------------------------------- */
+    const PWAManager = {
+      deferredPrompt: null,
+      manifestObj: null,
+
+      init() {
+        // 1. Génération d'une icône vectorielle haute définition pour l'écran d'accueil Android / Bureau
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <rect width="512" height="512" rx="108" fill="#0f172a"/>
+          <path d="M70 330 H160 V180 H270 V330 H360 V180 H442" fill="none" stroke="#38bdf8" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M70 390 Q165 240 265 390 T442 360" fill="none" stroke="#f97316" stroke-width="20" stroke-linecap="round"/>
+          <circle cx="270" cy="180" r="18" fill="#22c55e"/>
+        </svg>`;
+        const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+        // 2. Injection dynamique du Web App Manifest (requis pour l'installation sur PC & Android)
+        this.manifestObj = {
+          name: 'Simulateur Électronique de Puissance',
+          short_name: 'SimuPuissance',
+          description: 'Simulateur interactif de convertisseurs statiques (Buck, Boost, Buck-Boost, Demi-pont), pertes, thermique et FFT.',
+          start_url: window.location.href.split('#')[0],
+          display: 'standalone',
+          orientation: 'any',
+          background_color: '#0f172a',
+          theme_color: '#0f172a',
+          icons: [
+            { src: iconUrl, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+            { src: iconUrl, sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+          ]
+        };
+
+        try {
+          const manifestBlob = new Blob([JSON.stringify(this.manifestObj, null, 2)], { type: 'application/manifest+json' });
+          const manifestLink = document.createElement('link');
+          manifestLink.rel = 'manifest';
+          manifestLink.href = URL.createObjectURL(manifestBlob);
+          document.head.appendChild(manifestLink);
+        } catch (e) { /* Ignoré en contexte restreint */ }
+
+        // 3. Enregistrement d'un Service Worker hors-ligne si servi en HTTP/HTTPS
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+          const swCode = `
+            const CACHE = 'simu-puissance-v1';
+            self.addEventListener('install', e => { self.skipWaiting(); });
+            self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
+            self.addEventListener('fetch', e => {
+              e.respondWith(
+                caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
+                  const copy = resp.clone();
+                  caches.open(CACHE).then(c => c.put(e.request, copy));
+                  return resp;
+                }).catch(() => cached))
+              );
+            });
+          `;
+          try {
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+          } catch (e) { /* Fallback silencieux */ }
+        }
+
+        // 4. Interception de l'événement natif Chrome / Edge / Android
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          this.deferredPrompt = e;
+          const box = document.getElementById('nativePromptBox');
+          if (box) box.classList.remove('hidden');
+        });
+      },
+
+      bindUI() {
+        const modal = document.getElementById('installModal');
+        document.getElementById('btnInstallApp').addEventListener('click', () => {
+          modal.classList.remove('hidden');
+        });
+        document.getElementById('btnCloseInstallModal').addEventListener('click', () => {
+          modal.classList.add('hidden');
+        });
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.add('hidden');
+        });
+
+        document.getElementById('btnTriggerNativeInstall').addEventListener('click', async () => {
+          if (!this.deferredPrompt) return;
+          this.deferredPrompt.prompt();
+          await this.deferredPrompt.userChoice;
+          this.deferredPrompt = null;
+          document.getElementById('nativePromptBox').classList.add('hidden');
+        });
+
+        // Téléchargement du fichier HTML complet autonome
+        document.getElementById('btnDownloadStandaloneHtml').addEventListener('click', () => {
+          const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'index.html';
+          a.click();
+        });
+
+        // Téléchargement du manifest.json prêt pour PWABuilder / Capacitor (génération APK)
+        document.getElementById('btnDownloadManifestJson').addEventListener('click', () => {
+          const cleanManifest = Object.assign({}, this.manifestObj, { start_url: './index.html' });
+          const blob = new Blob([JSON.stringify(cleanManifest, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'manifest.json';
+          a.click();
+        });
+      }
+    };
+  </script>
+
+</body></html>
